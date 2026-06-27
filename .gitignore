@@ -25,3 +25,4 @@ logs
 
 # Cloudflare / Wrangler
 .wrangler/
+.dev.vars
