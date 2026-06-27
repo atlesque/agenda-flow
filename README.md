@@ -1,75 +1,21 @@
-# Nuxt Minimal Starter
+# AgendaFlow
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Turn any Confluence meeting page into a structured, timeboxed agenda with a built-in meeting timer — powered by DeepSeek.
 
-## Setup
+## How It Works
 
-Make sure to install dependencies:
+1. **Paste a URL** — drop in a Confluence Cloud page link.
+2. **AI parses it** — DeepSeek extracts topics and durations from the page content.
+3. **Review & edit** — tweak topic names, durations, add or remove items.
+4. **Run the timer** — start the meeting with a local countdown timer that tracks your current topic, next up, and total remaining time.
 
-```bash
-# npm
-npm install
+## Tech Stack
 
-# pnpm
-pnpm install
+- **Frontend:** Nuxt 4 SPA on Cloudflare Pages
+- **Backend:** Cloudflare Worker API
+- **AI:** DeepSeek for agenda parsing
+- **Integration:** Confluence Cloud REST API
 
-# yarn
-yarn install
+## MVP
 
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+No login. No shared state. No write-back. Just paste a URL, get an agenda, and run your meeting.
