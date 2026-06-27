@@ -4,7 +4,7 @@ Turn any Confluence Cloud meeting page into a structured, timeboxed agenda with 
 
 ## Architecture
 
-```
+```javascript
 ┌─────────────────────────┐     ┌──────────────────────┐     ┌──────────────┐
 │   Nuxt SPA              │     │  Cloudflare Worker    │     │  Confluence   │
 │   (Cloudflare Pages)    │────▶│  /api/parse-          │────▶│  Cloud REST   │
@@ -67,7 +67,7 @@ type MeetingAgenda = {
 
 **Errors**
 | Status | Reason |
-|--------|--------|
+| --- | --- |
 | 400 | Invalid or missing URL |
 | 400 | URL is not a Confluence Cloud page |
 | 502 | Confluence API unreachable or returned an error |
@@ -104,8 +104,8 @@ type MeetingAgenda = {
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | Nuxt 3 (SPA mode) |
+| --- | --- |
+| Frontend | Nuxt 4 (SPA mode) |
 | Hosting | Cloudflare Pages |
 | API | Cloudflare Workers |
 | AI | DeepSeek (chat/completions) |

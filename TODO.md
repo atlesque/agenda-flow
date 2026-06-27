@@ -2,7 +2,7 @@
 
 ## 1. Project scaffolding
 
-- [ ] Initialize Nuxt 3 project (`npx nuxi init`)
+- [ ] Initialize Nuxt 4 project with pnpm (`pnpm dlx nuxi init`)
 - [ ] Configure `wrangler.toml` for Cloudflare Pages + Worker
 - [ ] Set up shared TypeScript types (`MeetingAgenda`, API request/response)
 - [ ] Add `.gitignore`, `.editorconfig`, and linting config
@@ -19,10 +19,10 @@
 ## 3. DeepSeek prompt engineering
 
 - [ ] Craft system + user prompt pair that:
-  - Prioritizes table rows with topic + timebox
-  - Recognizes explicit durations (`10 min`, `15m`, `00:20`)
-  - Defaults missing durations to `15`
-  - Ignores unrelated page content (headers, footers, nav, comments)
+    - Prioritizes table rows with topic + timebox
+    - Recognizes explicit durations (`10 min`, `15m`, `00:20`)
+    - Defaults missing durations to `15`
+    - Ignores unrelated page content (headers, footers, nav, comments)
 - [ ] Request structured JSON output matching `MeetingAgenda`
 - [ ] Add a `max_tokens` cap and timeout to keep responses fast
 
