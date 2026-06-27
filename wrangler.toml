@@ -1,0 +1,16 @@
+name = "agenda-flow"
+compatibility_date = "2026-06-27"
+compatibility_flags = ["nodejs_compat"]
+
+# --- Secrets (set via `wrangler secret put`, never hardcode) ---
+# CONFLUENCE_API_TOKEN
+# DEEPSEEK_API_KEY
+
+[vars]
+# Public (non-sensitive) environment variables
+ENVIRONMENT = "production"
+
+[[redirects]]
+from = "/api/*"
+to = "/api/:splat"
+status = 200
