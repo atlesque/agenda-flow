@@ -16,6 +16,8 @@
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260627.1"
+    "@cloudflare/workers-types": "^4.20260627.1",
+    "@nuxt/eslint": "^1.16.0",
+    "eslint": "^10.6.0"
   }
 }
