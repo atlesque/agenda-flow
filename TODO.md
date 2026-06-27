@@ -2,14 +2,14 @@
 
 ## 1. Project scaffolding
 
-- [ ] Initialize Nuxt 4 project with pnpm (`pnpm dlx nuxi init`)
-- [ ] Configure `wrangler.toml` for Cloudflare Pages + Worker
-- [ ] Set up shared TypeScript types (`MeetingAgenda`, API request/response)
-- [ ] Add `.gitignore`, `.editorconfig`, and linting config
+- [x] Initialize Nuxt 4 project with pnpm (`pnpm dlx nuxi init`)
+- [x] Configure `wrangler.toml` for Cloudflare Pages + Worker
+- [x] Set up shared TypeScript types (`MeetingAgenda`, API request/response)
+- [x] Add `.gitignore`, `.editorconfig`, and linting config
 
 ## 2. Cloudflare Worker — `POST /api/parse-confluence-page`
 
-- [ ] Create Worker entry point (`functions/api/parse-confluence-page.ts` or `workers/`)
+- [x] Create Worker entry point (`functions/api/parse-confluence-page.ts` or `workers/`)
 - [ ] Validate incoming Confluence Cloud URL, extract `pageId`
 - [ ] Fetch page content from Confluence REST API (`GET /wiki/api/v2/pages/{id}` with `body-format=storage`)
 - [ ] Send HTML/storage content to DeepSeek chat/completions with a system prompt that produces the `MeetingAgenda` schema
