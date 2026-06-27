@@ -5,30 +5,22 @@
 
 // A single topic with its timebox.
 export interface AgendaTopic {
-  title: string
+  readonly title: string
   /** Duration in minutes. Default 15 when the AI can't determine one. */
-  durationMinutes: number
+  readonly durationMinutes: number
   /** Optional extra context extracted from the page. */
-  notes?: string
+  readonly notes?: string
 }
 
 // The parsed meeting agenda returned by the AI.
 export interface MeetingAgenda {
-  title: string
-  topics: AgendaTopic[]
+  readonly title: string
+  readonly topics: readonly AgendaTopic[]
 }
 
 // ---------------------------------------------------------------------------
 // POST /api/parse-confluence-page
 // ---------------------------------------------------------------------------
-
-export interface ParseConfluencePageRequest {
-  url: string
-}
-
-export type ParseConfluencePageResponse =
-  | { ok: true; agenda: MeetingAgenda }
-  | { ok: false; code: ParseErrorCode; message: string }
 
 export type ParseErrorCode =
   | 'INVALID_URL'
@@ -37,3 +29,11 @@ export type ParseErrorCode =
   | 'DEEPSEEK_API_ERROR'
   | 'PARSE_FAILED'
   | 'UNEXPECTED_ERROR'
+
+export interface ParseConfluencePageRequest {
+  readonly url: string
+}
+
+export type ParseConfluencePageResponse =
+  | { readonly ok: true; readonly agenda: MeetingAgenda }
+  | { readonly ok: false; readonly code: ParseErrorCode; readonly message: string }
