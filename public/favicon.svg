@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Stopwatch body: filled circle -->
+  <circle cx="24" cy="24" r="22" fill="#7C3AED" />
+  <!-- Inner rim highlight -->
+  <circle cx="24" cy="24" r="20" fill="none" stroke="#A78BFA" stroke-width="1" stroke-opacity="0.3" />
+
+  <!-- Play triangle cutout (negative space) -->
+  <polygon points="18,13 18,35 35,24" fill="white" />
+
+  <!-- Clock hand: short line pointing to ~2 o'clock from center -->
+  <line x1="24" y1="24" x2="30" y2="16" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Center dot -->
+  <circle cx="24" cy="24" r="2.5" fill="white" />
+</svg>
