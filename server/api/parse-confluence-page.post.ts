@@ -8,8 +8,8 @@
 // ---------------------------------------------------------------------------
 
 import type {
-  MeetingAgenda,
   AgendaTopic,
+  MeetingAgenda,
   ParseConfluencePageRequest,
   ParseConfluencePageResponse,
 } from '../../shared/types'
@@ -30,9 +30,7 @@ const DEEPSEEK_TIMEOUT_MS = 30_000
 // Helpers
 // ---------------------------------------------------------------------------
 
-function parseConfluenceUrl(
-  raw: string,
-): { domain: string; pageId: string } | null {
+function parseConfluenceUrl(raw: string): { domain: string; pageId: string } | null {
   const match = raw.trim().match(CONFLUENCE_URL_RE)
   if (!match?.groups) return null
   return {
@@ -41,10 +39,7 @@ function parseConfluenceUrl(
   }
 }
 
-async function fetchConfluencePage(
-  domain: string,
-  pageId: string,
-): Promise<string> {
+async function fetchConfluencePage(domain: string, pageId: string): Promise<string> {
   const token = process.env.CONFLUENCE_API_TOKEN
   if (!token) {
     throw new Error('CONFLUENCE_API_TOKEN secret is not configured')
@@ -67,9 +62,7 @@ async function fetchConfluencePage(
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(
-      `Confluence API returned ${res.status}: ${text.slice(0, 200)}`,
-    )
+    throw new Error(`Confluence API returned ${res.status}: ${text.slice(0, 200)}`)
   }
 
   const body = (await res.json()) as {
@@ -94,9 +87,7 @@ function escapeHtmlComment(s: string): string {
   return s.replace(/-->/g, '-- >')
 }
 
-async function callDeepSeek(
-  pageContent: string,
-): Promise<MeetingAgenda> {
+async function callDeepSeek(pageContent: string): Promise<MeetingAgenda> {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) {
     throw new Error('DEEPSEEK_API_KEY secret is not configured')
@@ -177,8 +168,7 @@ function parseDeepSeekResponse(raw: string): MeetingAgenda {
       throw new Error(`Topic at index ${i} is not an object`)
     }
 
-    const topicTitle =
-      typeof t.title === 'string' ? t.title.trim() : `Untitled topic ${i + 1}`
+    const topicTitle = typeof t.title === 'string' ? t.title.trim() : `Untitled topic ${i + 1}`
 
     let durationMinutes = 15 // default per spec
     if (typeof t.durationMinutes === 'number' && Number.isFinite(t.durationMinutes)) {
@@ -188,8 +178,7 @@ function parseDeepSeekResponse(raw: string): MeetingAgenda {
       durationMinutes = Math.max(1, Math.round(t.duration))
     }
 
-    const notes =
-      typeof t.notes === 'string' ? t.notes.trim() : undefined
+    const notes = typeof t.notes === 'string' ? t.notes.trim() : undefined
 
     return { title: topicTitle, durationMinutes, ...(notes ? { notes } : {}) }
   })
