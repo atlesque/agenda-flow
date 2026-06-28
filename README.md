@@ -12,7 +12,7 @@ Turn any Confluence meeting page into a structured, timeboxed agenda with a buil
 ## Tech Stack
 
 - **Frontend:** Nuxt 4 SPA on Cloudflare Pages
-- **Backend:** Cloudflare Worker API
+- **Backend:** Nuxt server routes (Nitro) deployed to Cloudflare Workers
 - **AI:** DeepSeek for agenda parsing
 - **Integration:** Confluence Cloud REST API
 

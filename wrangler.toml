@@ -3,8 +3,9 @@ pages_build_output_dir = "./dist"
 compatibility_date = "2026-06-27"
 compatibility_flags = ["nodejs_compat"]
 
-# --- Secrets (set via `wrangler secret put`, never hardcode) ---
+# --- Secrets (set via `wrangler pages secret put`, never hardcode) ---
 # CONFLUENCE_API_TOKEN
+# CONFLUENCE_USER_EMAIL
 # DEEPSEEK_API_KEY
 
 [vars]

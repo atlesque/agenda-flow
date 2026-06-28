@@ -7,14 +7,14 @@
 - [x] Set up shared TypeScript types (`MeetingAgenda`, API request/response)
 - [x] Add `.gitignore`, `.editorconfig`, and linting config
 
-## 2. Cloudflare Worker — `POST /api/parse-confluence-page`
+## 2. Nuxt server route — `POST /api/parse-confluence-page`
 
-- [x] Create Worker entry point (`functions/api/parse-confluence-page.ts` or `workers/`)
-- [ ] Validate incoming Confluence Cloud URL, extract `pageId`
-- [ ] Fetch page content from Confluence REST API (`GET /wiki/api/v2/pages/{id}` with `body-format=storage`)
-- [ ] Send HTML/storage content to DeepSeek chat/completions with a system prompt that produces the `MeetingAgenda` schema
-- [ ] Parse the DeepSeek JSON response, fallback gracefully on malformed output
-- [ ] Return `{ title, topics[] }` as JSON
+- [x] Create Nuxt server route entry point (`server/api/parse-confluence-page.post.ts`)
+- [x] Validate incoming Confluence Cloud URL, extract `pageId`
+- [x] Fetch page content from Confluence REST API (`GET /wiki/api/v2/pages/{id}` with `body-format=storage`)
+- [x] Send HTML/storage content to DeepSeek chat/completions with a system prompt that produces the `MeetingAgenda` schema
+- [x] Parse the DeepSeek JSON response, fallback gracefully on malformed output
+- [x] Return `{ title, topics[] }` as JSON
 
 ## 3. DeepSeek prompt engineering
 
@@ -55,11 +55,11 @@
 
 ## 7. Cloudflare secrets & deployment
 
-- [ ] Store Confluence API token as Cloudflare Worker secret (`CONFLUENCE_API_TOKEN`)
-- [ ] Store DeepSeek API key as Cloudflare Worker secret (`DEEPSEEK_API_KEY`)
+- [ ] Store Confluence API token as Cloudflare Pages secret (`CONFLUENCE_API_TOKEN`)
+- [ ] Store Confluence user email as Cloudflare Pages secret (`CONFLUENCE_USER_EMAIL`)
+- [ ] Store DeepSeek API key as Cloudflare Pages secret (`DEEPSEEK_API_KEY`)
 - [ ] Configure `wrangler.toml` with secrets bindings and routes
-- [ ] Deploy Worker to Cloudflare
-- [ ] Deploy Nuxt SPA to Cloudflare Pages
+- [ ] Deploy Nuxt SPA to Cloudflare Pages (`wrangler pages deploy dist`)
 
 ## 8. Polish & validation
 
