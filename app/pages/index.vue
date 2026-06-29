@@ -42,12 +42,7 @@
           <span class="i-lucide-database size-4" />
           <span>Served from cache</span>
         </div>
-        <UButton
-          variant="link"
-          size="sm"
-          :disabled="isLoading"
-          @click="clearAndRetry"
-        >
+        <UButton variant="link" size="sm" :disabled="isLoading" @click="clearAndRetry">
           Clear cache &amp; retry
         </UButton>
       </div>
