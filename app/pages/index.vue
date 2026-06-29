@@ -60,12 +60,28 @@
             <UBadge :label="String(i + 1)" color="primary" variant="soft" size="sm" square />
             <div class="min-w-0 flex-1">
               <p class="font-medium">{{ topic.title }}</p>
-              <p class="mt-0.5 text-sm text-muted">
-                {{ topic.durationMinutes }} min
+              <p class="mt-0.5 text-sm text-muted flex flex-wrap items-center gap-1.5">
+                <span>{{ topic.durationMinutes }} min</span>
                 <template v-if="topic.presenter?.length">
-                  · {{ topic.presenter.join(', ') }}
+                  <UBadge
+                    v-for="(person, pi) in topic.presenter"
+                    :key="pi"
+                    color="info"
+                    variant="subtle"
+                    size="sm"
+                  >
+                    {{ person }}
+                  </UBadge>
                 </template>
-                <template v-if="topic.uxNeeded"> · UX needed</template>
+                <UBadge
+                  v-if="topic.uxNeeded"
+                  color="warning"
+                  variant="soft"
+                  size="sm"
+                  icon="i-lucide-sparkles"
+                >
+                  UX needed
+                </UBadge>
               </p>
             </div>
           </li>
