@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "agenda-flow",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-06-27",
@@ -12,14 +12,14 @@
 
   "vars": {
     // Public (non-sensitive) environment variables
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
   },
 
   "env": {
     "preview": {
       "vars": {
-        "ENVIRONMENT": "preview"
-      }
-    }
-  }
+        "ENVIRONMENT": "preview",
+      },
+    },
+  },
 }
