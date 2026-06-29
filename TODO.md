@@ -55,10 +55,10 @@
 
 ## 7. Cloudflare secrets & deployment
 
-- [ ] Store Confluence API token as Cloudflare Pages secret (`CONFLUENCE_API_TOKEN`)
-- [ ] Store Confluence user email as Cloudflare Pages secret (`CONFLUENCE_USER_EMAIL`)
-- [ ] Store DeepSeek API key as Cloudflare Pages secret (`DEEPSEEK_API_KEY`)
-- [ ] Configure `wrangler.toml` with secrets bindings and routes
+- [x] Store Confluence API token as Cloudflare Pages secret (`CONFLUENCE_API_TOKEN`)
+- [x] Store Confluence user email as Cloudflare Pages secret (`CONFLUENCE_USER_EMAIL`)
+- [x] Store DeepSeek API key as Cloudflare Pages secret (`DEEPSEEK_API_KEY`)
+- [x] Configure `wrangler.toml` with secrets bindings and routes
 - [ ] Deploy Nuxt SPA to Cloudflare Pages (`wrangler pages deploy dist`)
 
 ## 8. Polish & validation
