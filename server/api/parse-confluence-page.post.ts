@@ -21,8 +21,8 @@ import type {
 const CONFLUENCE_URL_RE =
   /^https?:\/\/(?<domain>[^.]+)\.atlassian\.net\/wiki\/spaces\/[^/]+\/pages\/(?<pageId>\d+)/i
 
-const DEEPSEEK_BASE = 'https://api.deepseek.com/v1'
-const DEEPSEEK_MODEL = 'deepseek-chat'
+const DEEPSEEK_BASE = 'https://api.deepseek.com'
+const DEEPSEEK_MODEL = 'deepseek-v4-flash'
 const DEEPSEEK_MAX_TOKENS = 4096
 const DEEPSEEK_TIMEOUT_MS = 30_000
 
