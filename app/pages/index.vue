@@ -46,7 +46,7 @@
           variant="link"
           size="sm"
           :disabled="isLoading"
-          @click="clearCache(url); fetchAgenda(url)"
+          @click="clearAndRetry"
         >
           Clear cache &amp; retry
         </UButton>
@@ -151,6 +151,11 @@ function validateUrl(raw: string): boolean {
     return false
   }
   return true
+}
+
+async function clearAndRetry(): Promise<void> {
+  clearCache(url.value)
+  await fetchAgenda(url.value)
 }
 
 async function handleSubmit(): Promise<void> {
