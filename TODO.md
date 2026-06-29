@@ -18,13 +18,13 @@
 
 ## 3. DeepSeek prompt engineering
 
-- [ ] Craft system + user prompt pair that:
+- [x] Craft system + user prompt pair that:
   - Prioritizes table rows with topic + timebox
   - Recognizes explicit durations (`10 min`, `15m`, `00:20`)
   - Defaults missing durations to `15`
   - Ignores unrelated page content (headers, footers, nav, comments)
-- [ ] Request structured JSON output matching `MeetingAgenda`
-- [ ] Add a `max_tokens` cap and timeout to keep responses fast
+- [x] Request structured JSON output matching `MeetingAgenda`
+- [x] Add a `max_tokens` cap and timeout to keep responses fast
 
 ## 4. Nuxt frontend — URL input screen
 

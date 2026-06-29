@@ -23,8 +23,8 @@ const CONFLUENCE_URL_RE =
 
 const DEEPSEEK_BASE = 'https://api.deepseek.com'
 const DEEPSEEK_MODEL = 'deepseek-v4-flash'
-const DEEPSEEK_MAX_TOKENS = 4096
-const DEEPSEEK_TIMEOUT_MS = 30_000
+const DEEPSEEK_MAX_TOKENS = 2048
+const DEEPSEEK_TIMEOUT_MS = 20_000
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,9 +118,16 @@ async function callDeepSeek(pageContent: string): Promise<MeetingAgenda> {
         max_tokens: DEEPSEEK_MAX_TOKENS,
         temperature: 0, // deterministic output for structured data
         response_format: { type: 'json_object' },
+        thinking: { type: 'disabled' }, // disable thinking for structured JSON extraction (faster & cheaper)
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: pageContent },
+          {
+            role: 'user',
+            content: `Extract the meeting agenda from the Confluence page below. Return ONLY the JSON object — no explanations, no markdown fences.
+
+--- PAGE CONTENT ---
+${pageContent}`,
+          },
         ],
       }),
       signal: controller.signal,
@@ -227,46 +234,65 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 // System prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are an agenda extraction tool. Given the Atlas Document Format (ADF) JSON of a Confluence meeting page, extract the meeting agenda as structured JSON.
+const SYSTEM_PROMPT = `You are a focused meeting agenda extraction tool. Your ONLY job is to find the core agenda table (or list) in a Confluence meeting page and return it as structured JSON. Ignore EVERYTHING else — headers, footers, sidebars, navigation, comments, reactions, metadata, and boilerplate.
 
-ADF is a JSON-based format. Key structures you will encounter:
-- "type": "heading" with "text" content → page or section titles
-- "type": "table" with "tableRow" children → the agenda table
+--- ADF Primer ---
+The input is Atlas Document Format (ADF) JSON:
+- "type": "heading" with nested "text" → page/section titles
+- "type": "table" containing "tableRow" children → the agenda table
 - "type": "mention" with "attrs": { "text": "@Display Name" } → a tagged person
 - "type": "taskItem" with "attrs": { "state": "DONE" | "TODO" } → a checkbox
 - "type": "inlineCard" with "attrs": { "url": ".../browse/KEY-123" } → a JIRA ticket link
 - "type": "text" with "marks": [{ "type": "strong" }] → bold text
 
-Rules:
-1. Find the meeting title from the first heading or page context.
-2. Scan table rows for agenda topics. Each row maps to one topic.
-3. Skip empty rows (rows where all cells are empty or contain only whitespace).
-4. The first row is typically a header row — use it to identify columns but DO NOT include it as a topic.
-5. Extract:
-   - "title": The topic/ticket name. If a JIRA inlineCard is present, include the issue key (e.g., "MBP-4359") in the title.
-   - "durationMinutes": From the timebox column. Detect formats: "10 min", "15m", "00:20", "20 minutes", "10'", bare numbers. Default to 15.
-   - "notes": From the comments/notes column, including any @mentions of people for context.
-   - "presenter": Array of person names from the Presenter column. Look for "mention" nodes with "@Display Name" — extract just the name without the @.
-   - "uxNeeded": boolean. Look in the "UX nodig?" column for taskItem with state "DONE" (true) or "TODO" (false), or text like "Ja" (true) / "Nee" (false). Omit if unclear.
-6. Ignore headers, footers, navigation, comments, and other non-agenda content.
-7. If there are no table rows but the page contains a bulleted or numbered list of topics, extract those instead.
-8. Return ONLY valid JSON matching this schema:
+--- Extraction Rules ---
 
+1. TITLE: Use the first heading (h1/h2/h3) or the page title embedded at the top. If multiple headings exist, prefer the one closest to the agenda table.
+
+2. TABLE DETECTION: Prioritize the FIRST table that has a topic/description column paired with a duration/time column. If a second smaller table exists (e.g., action items), extract it too — but the primary agenda table comes first. If no table is found, fall back to bulleted/numbered lists.
+
+3. ROW HANDLING:
+   - Skip the first row if it's a header (contains column labels like "Topic", "Time", "Duration", "Owner", "Presenter").
+   - Skip entirely empty rows.
+   - Skip rows that have a topic cell but the topic is obviously not an agenda item (e.g., "Lunch", "Break", section separators like "---").
+
+4. TOPIC TITLE: Use the text from the topic/description cell. If a JIRA inlineCard is present, include the issue key (e.g., "MBP-4359") in the title. Strip trailing punctuation unless it's part of the ticket key.
+
+5. DURATION (durationMinutes) — parse from the time/duration column:
+   - "10 min", "10 minutes", "10m" → 10
+   - "00:20", "0:20", "00:20:00" → 20 (HH:MM:SS → total minutes; HH:MM → total minutes)
+   - "1h 30m", "1.5h", "90m" → 90
+   - "10'", "10''" → 10
+   - Bare numbers like "10", "15" → treat as minutes
+   - If the cell is empty, unclear, or contains only text without a number → DEFAULT TO 15.
+
+6. NOTES: From any comments/notes/description column. Include @mention names for context.
+
+7. PRESENTER: Array of names from the Presenter/Owner/Lead column. Extract mention text without the "@" prefix.
+
+8. UX NEEDED (uxNeeded): Look for a column with "UX" in the header. Interpret:
+   - taskItem state DONE, text "Ja"/"Yes"/"✓"/"x" → true
+   - taskItem state TODO, text "Nee"/"No"/"—"/"-" → false
+   - Omit the field entirely if there is no UX column or the value is ambiguous.
+
+9. IGNORE: Page headers, navigation breadcrumbs, sidebar panels, comment threads, reaction pickers, "Created by" metadata, page tree macros, table of contents, and any content before the first heading or after a horizontal rule near the page bottom.
+
+--- Output ---
+Return ONLY a single JSON object. No markdown fences, no surrounding text.
+
+Schema:
 {
-  "title": "Meeting Title",
+  "title": "string",
   "topics": [
     {
-      "title": "Topic name (JIRA-KEY)",
-      "durationMinutes": 15,
-      "notes": "Optional extra context",
-      "presenter": ["Name One", "Name Two"],
-      "uxNeeded": true
+      "title": "string",
+      "durationMinutes": number,
+      "notes": "string (optional)",
+      "presenter": ["string", ...] (optional),
+      "uxNeeded": boolean (optional)
     }
   ]
-}
-
-All fields except title and durationMinutes are optional. Do not include empty arrays or null values.
-Do not include any text outside the JSON object.`
+}`
 
 // ---------------------------------------------------------------------------
 // Route handler
