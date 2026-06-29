@@ -33,6 +33,25 @@
         </UButton>
       </form>
 
+      <!-- Cache indicator -->
+      <div
+        v-if="wasCached"
+        class="flex items-center justify-between rounded-md bg-(--ui-bg-elevated) p-3"
+      >
+        <div class="flex items-center gap-2 text-sm text-muted">
+          <span class="i-lucide-database size-4" />
+          <span>Served from cache</span>
+        </div>
+        <UButton
+          variant="link"
+          size="sm"
+          :disabled="isLoading"
+          @click="clearCache(url); fetchAgenda(url)"
+        >
+          Clear cache &amp; retry
+        </UButton>
+      </div>
+
       <!-- API error -->
       <UAlert
         v-if="apiError"
@@ -85,8 +104,6 @@
 </template>
 
 <script setup lang="ts">
-import type { MeetingAgenda, ParseConfluencePageResponse } from '#shared/types'
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -95,14 +112,17 @@ const CONFLUENCE_URL_RE =
   /^https?:\/\/(?<domain>[^.]+)\.atlassian\.net\/wiki\/spaces\/[^/]+\/pages\/(?<pageId>\d+)/i
 
 // ---------------------------------------------------------------------------
+// Composables
+// ---------------------------------------------------------------------------
+
+const { agenda, isLoading, wasCached, apiError, fetchAgenda, clearCache } = useAgendaCache()
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
 const url = ref('')
-const isLoading = ref(false)
 const validationError = ref<string | null>(null)
-const apiError = ref<{ heading: string; message: string } | null>(null)
-const agenda = ref<MeetingAgenda | null>(null)
 
 const timelineItems = computed(() =>
   (agenda.value?.topics ?? []).map((topic) => ({
@@ -133,70 +153,13 @@ function validateUrl(raw: string): boolean {
   return true
 }
 
-function mapErrorCode(code: string, message: string): { heading: string; message: string } {
-  switch (code) {
-    case 'INVALID_URL':
-    case 'NOT_CONFLUENCE_CLOUD':
-      return {
-        heading: 'Invalid URL',
-        message:
-          'The URL does not point to a Confluence Cloud wiki page. Please check the address and try again.',
-      }
-    case 'CONFLUENCE_FETCH_FAILED':
-      return {
-        heading: 'Could not fetch the Confluence page',
-        message:
-          'Make sure the page exists and is accessible. If the page is restricted, you may need to adjust its permissions.',
-      }
-    case 'DEEPSEEK_API_ERROR':
-      return {
-        heading: 'AI parsing failed',
-        message:
-          'The page was fetched but the agenda could not be extracted. The page may not contain a recognizable meeting table.',
-      }
-    case 'PARSE_FAILED':
-      return {
-        heading: 'Could not parse the agenda',
-        message:
-          'The AI returned a response that could not be interpreted. Try again or check the page content.',
-      }
-    default:
-      return {
-        heading: 'Unexpected error',
-        message: message || 'Something went wrong. Please try again later.',
-      }
-  }
-}
-
 async function handleSubmit(): Promise<void> {
   clearErrors()
 
   // 1. Client-side validation
   if (!validateUrl(url.value)) return
 
-  // 2. POST to the server route
-  isLoading.value = true
-  try {
-    const res = await fetch('/api/parse-confluence-page', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.value }),
-    })
-
-    const body: ParseConfluencePageResponse = await res.json()
-
-    if (body.ok) {
-      agenda.value = body.agenda
-    } else {
-      apiError.value = mapErrorCode(body.code, body.message)
-    }
-  } catch {
-    apiError.value = {
-      heading: 'Network error',
-      message: 'Could not reach the server. Check your connection and try again.',
-    }
-  } finally {
-    isLoading.value = false
-  }
+  // 2. Fetch via composable (handles cache + API)
+  await fetchAgenda(url.value)
 }
 </script>
