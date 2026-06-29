@@ -51,7 +51,7 @@ async function fetchConfluencePage(domain: string, pageId: string): Promise<stri
   }
 
   const credentials = btoa(`${email}:${token}`)
-  const url = `https://${domain}.atlassian.net/wiki/api/v2/pages/${pageId}?body-format=storage`
+  const url = `https://${domain}.atlassian.net/wiki/api/v2/pages/${pageId}?body-format=atlas_doc_format`
 
   const res = await fetch(url, {
     headers: {
@@ -67,24 +67,34 @@ async function fetchConfluencePage(domain: string, pageId: string): Promise<stri
 
   const body = (await res.json()) as {
     title?: string
-    body?: { storage?: { value?: string } }
+    body?: { atlas_doc_format?: { value?: string } }
   }
 
-  const html = body?.body?.storage?.value
-  if (!html) {
-    throw new Error('Confluence page has no storage-format body')
+  const adfJson = body?.body?.atlas_doc_format?.value
+  if (!adfJson) {
+    throw new Error('Confluence page has no atlas_doc_format body')
   }
 
-  // Prepend the page title as context for the AI.
-  if (body.title) {
-    return `<!-- Page title: ${escapeHtmlComment(body.title)} -->\n${html}`
+  // Parse ADF JSON so we can embed the title as context, then re-stringify.
+  let adf: unknown
+  try {
+    adf = JSON.parse(adfJson)
+  } catch {
+    throw new Error('Confluence returned invalid ADF JSON')
   }
 
-  return html
-}
+  // Inject the page title as a top-level heading for the AI.
+  if (body.title && isRecord(adf)) {
+    adf = {
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: body.title }] },
+        ...(Array.isArray(adf.content) ? adf.content : []),
+      ],
+    }
+  }
 
-function escapeHtmlComment(s: string): string {
-  return s.replace(/-->/g, '-- >')
+  return JSON.stringify(adf)
 }
 
 async function callDeepSeek(pageContent: string): Promise<MeetingAgenda> {
@@ -180,7 +190,26 @@ function parseDeepSeekResponse(raw: string): MeetingAgenda {
 
     const notes = typeof t.notes === 'string' ? t.notes.trim() : undefined
 
-    return { title: topicTitle, durationMinutes, ...(notes ? { notes } : {}) }
+    let presenter: string[] | undefined
+    if (Array.isArray(t.presenter)) {
+      const names = t.presenter
+        .filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+        .map((p) => p.trim())
+      if (names.length > 0) presenter = names
+    }
+
+    let uxNeeded: boolean | undefined
+    if (typeof t.uxNeeded === 'boolean') {
+      uxNeeded = t.uxNeeded
+    }
+
+    return {
+      title: topicTitle,
+      durationMinutes,
+      ...(notes ? { notes } : {}),
+      ...(presenter ? { presenter } : {}),
+      ...(uxNeeded !== undefined ? { uxNeeded } : {}),
+    }
   })
 
   if (topics.length === 0) {
@@ -198,28 +227,45 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 // System prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are an agenda extraction tool. Given the HTML content of a Confluence meeting page, extract the meeting agenda as structured JSON.
+const SYSTEM_PROMPT = `You are an agenda extraction tool. Given the Atlas Document Format (ADF) JSON of a Confluence meeting page, extract the meeting agenda as structured JSON.
+
+ADF is a JSON-based format. Key structures you will encounter:
+- "type": "heading" with "text" content → page or section titles
+- "type": "table" with "tableRow" children → the agenda table
+- "type": "mention" with "attrs": { "text": "@Display Name" } → a tagged person
+- "type": "taskItem" with "attrs": { "state": "DONE" | "TODO" } → a checkbox
+- "type": "inlineCard" with "attrs": { "url": ".../browse/KEY-123" } → a JIRA ticket link
+- "type": "text" with "marks": [{ "type": "strong" }] → bold text
 
 Rules:
-1. Find the meeting title from the page title, main heading, or page context.
-2. Scan for table rows that contain a topic/agenda item and a duration/timebox.
-3. Detect durations in any format: "10 min", "15m", "00:20", "20 minutes", "10min", etc.
-4. Default missing durations to 15 minutes.
-5. Ignore headers, footers, navigation, comments, and other non-agenda content.
-6. If there are no table rows but the page contains a bulleted or numbered list of topics, extract those instead.
-7. Return ONLY valid JSON matching this schema:
+1. Find the meeting title from the first heading or page context.
+2. Scan table rows for agenda topics. Each row maps to one topic.
+3. Skip empty rows (rows where all cells are empty or contain only whitespace).
+4. The first row is typically a header row — use it to identify columns but DO NOT include it as a topic.
+5. Extract:
+   - "title": The topic/ticket name. If a JIRA inlineCard is present, include the issue key (e.g., "MBP-4359") in the title.
+   - "durationMinutes": From the timebox column. Detect formats: "10 min", "15m", "00:20", "20 minutes", "10'", bare numbers. Default to 15.
+   - "notes": From the comments/notes column, including any @mentions of people for context.
+   - "presenter": Array of person names from the Presenter column. Look for "mention" nodes with "@Display Name" — extract just the name without the @.
+   - "uxNeeded": boolean. Look in the "UX nodig?" column for taskItem with state "DONE" (true) or "TODO" (false), or text like "Ja" (true) / "Nee" (false). Omit if unclear.
+6. Ignore headers, footers, navigation, comments, and other non-agenda content.
+7. If there are no table rows but the page contains a bulleted or numbered list of topics, extract those instead.
+8. Return ONLY valid JSON matching this schema:
 
 {
   "title": "Meeting Title",
   "topics": [
     {
-      "title": "Topic name",
+      "title": "Topic name (JIRA-KEY)",
       "durationMinutes": 15,
-      "notes": "Optional extra context"
+      "notes": "Optional extra context",
+      "presenter": ["Name One", "Name Two"],
+      "uxNeeded": true
     }
   ]
 }
 
+All fields except title and durationMinutes are optional. Do not include empty arrays or null values.
 Do not include any text outside the JSON object.`
 
 // ---------------------------------------------------------------------------

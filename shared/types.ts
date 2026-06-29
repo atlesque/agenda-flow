@@ -10,6 +10,10 @@ export interface AgendaTopic {
   readonly durationMinutes: number
   /** Optional extra context extracted from the page. */
   readonly notes?: string
+  /** People presenting this topic (extracted from @mentions in the Presenter column). */
+  readonly presenter?: string[]
+  /** Whether UX team member presence is required for this topic. */
+  readonly uxNeeded?: boolean
 }
 
 // The parsed meeting agenda returned by the AI.
