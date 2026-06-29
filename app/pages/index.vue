@@ -13,6 +13,7 @@
           v-model.trim="url"
           type="url"
           size="xl"
+          class="w-full"
           placeholder="https://your-domain.atlassian.net/wiki/spaces/TEAM/pages/123456"
           :disabled="isLoading"
           :description="validationError"
