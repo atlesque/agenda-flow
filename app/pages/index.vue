@@ -8,18 +8,27 @@
       </div>
 
       <!-- URL input form -->
-      <form class="space-y-4" @submit.prevent="handleSubmit">
-        <UInput
-          v-model.trim="url"
-          type="url"
-          size="xl"
-          class="w-full"
-          placeholder="https://your-domain.atlassian.net/wiki/spaces/TEAM/pages/123456"
-          :disabled="isLoading"
-          :description="validationError"
-          :color="validationError ? 'error' : 'neutral'"
-          @input="clearErrors"
-        />
+      <form class="space-y-4" @submit="onSubmit">
+        <UFormField
+          label="Confluence page URL"
+          name="url"
+          :error="errors.url"
+          :help="
+            !errors.url
+              ? 'Paste a Confluence Cloud meeting page URL to generate a timed agenda.'
+              : undefined
+          "
+        >
+          <UInput
+            v-model="url"
+            v-bind="urlFieldAttrs"
+            type="url"
+            size="xl"
+            class="w-full"
+            placeholder="https://your-domain.atlassian.net/wiki/spaces/TEAM/pages/123456"
+            :disabled="isLoading"
+          />
+        </UFormField>
 
         <UButton
           type="submit"
@@ -34,10 +43,7 @@
       </form>
 
       <!-- Cache indicator -->
-      <div
-        v-if="wasCached"
-        class="flex items-center justify-between rounded-md bg-(--ui-bg-elevated) p-3"
-      >
+      <div v-if="wasCached" class="flex items-center justify-between rounded-md bg-elevated p-3">
         <div class="flex items-center gap-2 text-sm text-muted">
           <span class="i-lucide-database size-4" />
           <span>Served from cache</span>
@@ -113,11 +119,35 @@ const CONFLUENCE_URL_RE =
 const { agenda, isLoading, wasCached, apiError, fetchAgenda, clearCache } = useAgendaCache()
 
 // ---------------------------------------------------------------------------
-// State
+// Validation (vee-validate)
 // ---------------------------------------------------------------------------
 
-const url = ref('')
-const validationError = ref<string | null>(null)
+function validateConfluenceUrl(value: string | undefined): true | string {
+  if (!value) {
+    return 'Please enter a Confluence page URL.'
+  }
+  if (!CONFLUENCE_URL_RE.test(value)) {
+    return 'URL must match the pattern https://<domain>.atlassian.net/wiki/spaces/<key>/pages/<id>'
+  }
+  return true
+}
+
+const { errors, handleSubmit, defineField } = useForm({
+  validationSchema: {
+    url: validateConfluenceUrl,
+  },
+  initialValues: {
+    url: '',
+  },
+})
+
+const [url, urlFieldAttrs] = defineField('url', {
+  validateOnBlur: true,
+})
+
+// ---------------------------------------------------------------------------
+// Derived
+// ---------------------------------------------------------------------------
 
 const timelineItems = computed(() =>
   (agenda.value?.topics ?? []).map((topic) => ({
@@ -130,36 +160,13 @@ const timelineItems = computed(() =>
 // Methods
 // ---------------------------------------------------------------------------
 
-function clearErrors(): void {
-  validationError.value = null
-  apiError.value = null
-}
-
-function validateUrl(raw: string): boolean {
-  if (!raw) {
-    validationError.value = 'Please enter a Confluence page URL.'
-    return false
-  }
-  if (!CONFLUENCE_URL_RE.test(raw)) {
-    validationError.value =
-      'URL must match the pattern https://<domain>.atlassian.net/wiki/spaces/<key>/pages/<id>'
-    return false
-  }
-  return true
-}
-
 async function clearAndRetry(): Promise<void> {
   clearCache(url.value)
   await fetchAgenda(url.value)
 }
 
-async function handleSubmit(): Promise<void> {
-  clearErrors()
-
-  // 1. Client-side validation
-  if (!validateUrl(url.value)) return
-
-  // 2. Fetch via composable (handles cache + API)
-  await fetchAgenda(url.value)
-}
+const onSubmit = handleSubmit(async (formValues) => {
+  apiError.value = null
+  await fetchAgenda(formValues.url)
+})
 </script>
