@@ -1,6 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@nuxt/ui'],
+
+  css: ['~/assets/css/main.css'],
 
   ssr: false, // SPA mode — all rendering is client-side
 
