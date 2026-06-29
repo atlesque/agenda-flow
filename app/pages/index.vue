@@ -46,51 +46,40 @@
       />
 
       <!-- Success: parsed agenda -->
-      <UCard v-if="agenda" variant="subtle">
-        <template #header>
-          <h2 class="text-xl font-semibold">{{ agenda.title }}</h2>
+      <UTimeline
+        v-if="agenda"
+        :items="timelineItems"
+        color="primary"
+        size="sm"
+        class="**:data-[slot=description]:flex **:data-[slot=description]:flex-wrap **:data-[slot=description]:items-center **:data-[slot=description]:gap-1.5"
+      >
+        <template #title="{ item }">
+          <p class="font-medium">{{ item.title }}</p>
         </template>
-
-        <ul class="space-y-3">
-          <li
-            v-for="(topic, i) in agenda.topics"
-            :key="i"
-            class="flex items-start gap-3 rounded-lg bg-elevated px-4 py-3"
+        <template #description="{ item }">
+          <span class="text-sm text-muted">{{ item.durationMinutes }} min</span>
+          <template v-if="item.presenter?.length">
+            <UBadge
+              v-for="(person, pi) in item.presenter"
+              :key="pi"
+              color="info"
+              variant="subtle"
+              size="sm"
+            >
+              {{ person }}
+            </UBadge>
+          </template>
+          <UBadge
+            v-if="item.uxNeeded"
+            color="warning"
+            variant="soft"
+            size="sm"
+            icon="i-lucide-sparkles"
           >
-            <UBadge :label="String(i + 1)" color="primary" variant="soft" size="sm" square />
-            <div class="min-w-0 flex-1">
-              <p class="font-medium">{{ topic.title }}</p>
-              <p class="mt-0.5 text-sm text-muted flex flex-wrap items-center gap-1.5">
-                <span>{{ topic.durationMinutes }} min</span>
-                <template v-if="topic.presenter?.length">
-                  <UBadge
-                    v-for="(person, pi) in topic.presenter"
-                    :key="pi"
-                    color="info"
-                    variant="subtle"
-                    size="sm"
-                  >
-                    {{ person }}
-                  </UBadge>
-                </template>
-                <UBadge
-                  v-if="topic.uxNeeded"
-                  color="warning"
-                  variant="soft"
-                  size="sm"
-                  icon="i-lucide-sparkles"
-                >
-                  UX needed
-                </UBadge>
-              </p>
-            </div>
-          </li>
-        </ul>
-
-        <template #footer>
-          <p class="text-center text-sm text-muted">Review &amp; edit coming in the next update</p>
+            UX needed
+          </UBadge>
         </template>
-      </UCard>
+      </UTimeline>
     </div>
   </div>
 </template>
@@ -114,6 +103,13 @@ const isLoading = ref(false)
 const validationError = ref<string | null>(null)
 const apiError = ref<{ heading: string; message: string } | null>(null)
 const agenda = ref<MeetingAgenda | null>(null)
+
+const timelineItems = computed(() =>
+  (agenda.value?.topics ?? []).map((topic) => ({
+    ...topic,
+    icon: 'i-lucide-circle',
+  })),
+)
 
 // ---------------------------------------------------------------------------
 // Methods
