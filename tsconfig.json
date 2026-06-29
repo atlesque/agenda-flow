@@ -2,6 +2,7 @@
   // https://nuxt.com/docs/guide/concepts/typescript
   "files": [],
   "compilerOptions": {
+    "types": ["node"],
     "paths": {
       "#shared/*": ["./shared/*"]
     }
